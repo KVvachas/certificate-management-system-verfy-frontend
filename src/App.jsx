@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleAlert, FileUp, LockKeyhole, Search, ShieldAlert, XCircle, Award, BarChart3, CalendarDays, Files, Play, Sparkles } from "lucide-react";
 
-const API = import.meta.env.VITE_CENTRAL_API_URL || "https://verify.vsfreedomsolutions.in/api/v1";
+const API = import.meta.env.VITE_CENTRAL_API_URL || "/api/v1";
 const tokenFromPath = () => useParams().verificationToken;
 
 function Shell({ children }) {
