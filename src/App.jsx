@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleAlert, FileUp, LockKeyhole, Search, ShieldAlert, XCircle, Award, BarChart3, CalendarDays, Files, Play, Sparkles } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL || "https://cms.vsfreedomsolutions.in/api/v1";
+const API = import.meta.env.VITE_CENTRAL_API_URL || "https://verify.vsfreedomsolutions.in/api/v1";
 const tokenFromPath = () => useParams().verificationToken;
 
 function Shell({ children }) {
@@ -44,7 +44,42 @@ function InvalidResult({ token, error, onClear }) { return <section className="i
 
 function ImportPage() {
   const [file, setFile] = useState(null); const [key, setKey] = useState("local-dev-import-key"); const [preview, setPreview] = useState(null); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
-  async function send(path) { if (!file) return setMessage("Choose a version 3 JSON package first."); setBusy(true); setMessage(""); const form = new FormData(); form.append("file", file); try { const response = await fetch(`${API}/admin/import/${path}`, { method: "POST", headers: { "x-admin-key": key }, body: form }); const body = await response.json(); if (!response.ok) throw new Error(body.message || body.errors?.join(" ") || "Request failed."); setPreview(body); setMessage(path === "preview" ? "Package validated. Review the counts before importing." : "Import completed successfully."); } catch (err) { setMessage(err.message); } finally { setBusy(false); } }
+  async function send(path) {
+    if (!file) return setMessage("Choose a version 3 JSON package first.");
+    setBusy(true); setMessage("");
+    const form = new FormData(); form.append("file", file);
+    try {
+      const endpoint = path ? `${API}/admin/import/${path}` : `${API}/admin/import`;
+      const response = await fetch(endpoint, { method: "POST", headers: { "x-admin-key": key }, body: form });
+      let body = {};
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try { body = await response.json(); } catch (e) { throw new Error("Invalid JSON response from server."); }
+      } else {
+        await response.text();
+        if (response.status === 405) throw new Error("405: API method/routing configuration is incorrect.");
+        if (response.status === 401) throw new Error("401: Admin authentication failed.");
+        if (response.status >= 500) throw new Error(`${response.status}: Server error while processing the import.`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: Unexpected response format.`);
+      }
+      if (!response.ok) {
+         if (response.status === 401) throw new Error("401: Admin authentication failed.");
+         if (response.status === 409) throw new Error("409: Import conflicts detected.");
+         if (response.status === 400) throw new Error(body.message || body.errors?.join(" ") || "400: Validation or signature error.");
+         throw new Error(body.message || body.errors?.join(" ") || `HTTP ${response.status}: Request failed.`);
+      }
+      setPreview(body);
+      setMessage(path === "preview" ? "Package validated. Review the counts before importing." : "Import completed successfully.");
+    } catch (err) {
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+         setMessage("Unable to reach the verification server.");
+      } else {
+         setMessage(err.message);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
   return <main className="admin-page"><div className="admin-heading"><div className="eyebrow">ADMIN WORKSPACE</div><h1>Import verification data</h1><p>Upload a portable version 3 package. Local IDs are ignored; the portal creates its own relationships.</p></div><section className="import-card"><div className="upload-zone"><FileUp size={26} /><strong>{file ? file.name : "Choose a JSON export"}</strong><span>Signed version 3 packages only · up to 10 MB</span><input type="file" accept="application/json,.json" onChange={(event) => setFile(event.target.files?.[0] || null)} /></div><label>Admin import key<input value={key} onChange={(event) => setKey(event.target.value)} type="password" /></label><div className="button-row"><button className="secondary" onClick={() => send("preview")} disabled={busy}><Search size={16} /> Verify & Preview</button><button onClick={() => send("")} disabled={busy || !preview || preview.status === "CONFLICTS"}><LockKeyhole size={16} /> Commit import</button></div>{preview?.security && <div className="security-ok"><CheckCircle2 size={18} /><div><strong>Signature verified</strong><span>{preview.security.algorithm} · {preview.security.keyId} · AUTHORIZED EXPORT</span></div></div>}{message && <div className="notice">{message}</div>}</section>{preview?.summary && <section className="summary"><div className="eyebrow">IMPORT SUMMARY</div><div className="summary-grid">{Object.entries(preview.summary).map(([label, value]) => <div key={label}><strong>{value}</strong><span>{label.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)}</span></div>)}</div>{preview.conflicts?.length > 0 && <pre>{JSON.stringify(preview.conflicts, null, 2)}</pre>}</section>}</main>;
 }
 
