@@ -15,7 +15,7 @@ const upload = multer({
 });
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || "postgres://dummy:dummy@missing-database-url/dummy",
 });
 
 const port = Number(process.env.PORT || 8090);
