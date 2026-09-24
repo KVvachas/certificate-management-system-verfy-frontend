@@ -47,10 +47,18 @@ function ImportPage() {
   async function send(path) {
     if (!file) return setMessage("Choose a version 3 JSON package first.");
     setBusy(true); setMessage("");
-    const form = new FormData(); form.append("file", file);
+    let text;
+    try {
+       text = await file.text();
+       JSON.parse(text);
+    } catch (e) {
+       setBusy(false);
+       return setMessage("The selected file is not valid JSON.");
+    }
+    
     try {
       const endpoint = path ? `${API}/admin/import/${path}` : `${API}/admin/import`;
-      const response = await fetch(endpoint, { method: "POST", headers: { "x-admin-key": key }, body: form });
+      const response = await fetch(endpoint, { method: "POST", headers: { "x-admin-key": key, "Content-Type": "application/json" }, body: text });
       let body = {};
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
