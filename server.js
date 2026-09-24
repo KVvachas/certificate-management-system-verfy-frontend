@@ -496,10 +496,10 @@ app.post(
     } catch (error) {
       console.error(error);
 
-      res.status(400).json({
-        status: "INVALID",
+      res.status(500).json({
+        status: "ERROR",
         errors: [
-          "Uploaded content is not valid JSON.",
+          error.message || "An internal server error occurred.",
         ],
       });
     }
