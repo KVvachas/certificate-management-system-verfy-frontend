@@ -50,10 +50,11 @@ function Shell({ children }) {
           <div className="footer-links">
             <Link to="/verify">Verify Certificate</Link>
             <Link to="/about">About &amp; Policy</Link>
+            <a href="mailto:vsfreedomsolutions@gmail.com">Support</a>
           </div>
           <div className="footer-copy">
             <span>&#169; 2025 Certificate Management System · VS Freedom Solutions</span>
-            <span>All rights reserved</span>
+            <span>All rights reserved · <a href="mailto:vsfreedomsolutions@gmail.com" className="footer-email">vsfreedomsolutions@gmail.com</a></span>
           </div>
         </div>
       </footer>
@@ -2032,6 +2033,9 @@ function AboutPage() {
                   <strong>VS Freedom Solutions — Portal Support</strong>
                   <p>Operated by VS Freedom Solutions. Queries related to certificate content must
                   be directed to the respective issuing organization.</p>
+                  <a href="mailto:vsfreedomsolutions@gmail.com" className="about-email-link">
+                    vsfreedomsolutions@gmail.com
+                  </a>
                 </div>
               </div>
             </div>

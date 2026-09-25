@@ -93,11 +93,27 @@ footer { background: var(--ink); color: rgba(255,255,255,.6); padding: 40px var(
 .footer-brand img { width: 36px; height: 36px; object-fit: contain; filter: brightness(0) invert(1) opacity(.7); }
 .footer-brand strong { display: block; color: #fff; font-size: 14px; font-weight: 700; }
 .footer-brand span { display: block; font-size: 11px; color: rgba(255,255,255,.45); margin-top: 3px; }
-.footer-links { display: flex; gap: 20px; }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
 .footer-links a { color: rgba(255,255,255,.55); text-decoration: none; font-size: 12px; font-weight: 500; transition: color .15s; }
 .footer-links a:hover { color: #fff; }
 .footer-copy { font-size: 11px; }
 .footer-copy span { display: block; }
+.footer-email {
+  color: rgba(255,255,255,.55); text-decoration: none;
+  border-bottom: 1px dotted rgba(255,255,255,.25);
+  transition: color .15s, border-color .15s;
+}
+.footer-email:hover { color: #60A5FA; border-color: #60A5FA; }
+
+/* About page email link */
+.about-email-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px; font-size: 13px; font-weight: 700;
+  color: var(--blue); text-decoration: none;
+  border-bottom: 1.5px solid rgba(37,99,235,.25);
+  transition: color .15s, border-color .15s;
+}
+.about-email-link:hover { color: var(--blue-dark); border-color: var(--blue-dark); }
 
 /* ── Typography ─────────────────────────────────────── */
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
