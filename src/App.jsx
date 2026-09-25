@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle2, CircleAlert, FileUp,
   LockKeyhole, Search, ShieldAlert, XCircle, Award, BarChart3,
   CalendarDays, Sparkles, Shield, Zap, Users, FileCheck,
-  ChevronRight, Star, Globe, Clock, TrendingUp, Layout, Play,
+  ChevronRight, Globe, Clock, TrendingUp, Layout, Play,
   Download, Activity, RefreshCw, Trash2, Filter, FileSpreadsheet,
   Check, ExternalLink, ShieldCheck, Copy, Info, ScanLine, Camera, CameraOff
 } from "lucide-react";
@@ -164,19 +164,6 @@ function FeatureCard({ icon, title, text, color, delay }) {
   );
 }
 
-/* Testimonial */
-function Testimonial({ quote, name, role, org }) {
-  return (
-    <div className="testimonial">
-      <div className="t-stars">{[...Array(5)].map((_, i) => <Star key={i} size={13} fill="currentColor" />)}</div>
-      <blockquote>"{quote}"</blockquote>
-      <div className="t-author">
-        <div className="t-avatar">{name[0]}</div>
-        <div><strong>{name}</strong><span>{role}, {org}</span></div>
-      </div>
-    </div>
-  );
-}
 
 /* HomePage */
 function HomePage() {
@@ -297,19 +284,6 @@ function HomePage() {
             <div className="step"><div className="step-num">3</div><h3>See the result</h3><p>Instantly see if the certificate is valid, revoked, or not found — with full details.</p></div>
           </div>
           <div className="how-cta"><Link to="/verify" className="btn-primary">Try verification now <ArrowRight size={16} /></Link></div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="testimonials-section">
-        <div className="testimonials-inner">
-          <div className="section-badge"><Star size={13} fill="currentColor" /> TRUSTED BY TEAMS</div>
-          <h2>Loved by coordinators everywhere</h2>
-          <div className="testimonials-grid">
-            <Testimonial quote="The verification portal is incredibly smooth. Recipients love being able to share a link that proves their certificate is real." name="Sarah M." role="Event Coordinator" org="TechSummit 2024" />
-            <Testimonial quote="We issue hundreds of certificates per event. The CMS handles it effortlessly — templates, tokens, everything." name="David K." role="Program Manager" org="Global Leadership Forum" />
-            <Testimonial quote="Employers can verify our certificates in seconds. It's made our programs significantly more credible." name="Priya R." role="Director" org="Skills Academy" />
-          </div>
         </div>
       </section>
 
