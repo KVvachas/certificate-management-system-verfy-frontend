@@ -1,12 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import jsQR from "jsqr";
 import {
   ArrowLeft, ArrowRight, CheckCircle2, CircleAlert, FileUp,
   LockKeyhole, Search, ShieldAlert, XCircle, Award, BarChart3,
   CalendarDays, Sparkles, Shield, Zap, Users, FileCheck,
   ChevronRight, Star, Globe, Clock, TrendingUp, Layout, Play,
   Download, Activity, RefreshCw, Trash2, Filter, FileSpreadsheet,
-  Check, ExternalLink, ShieldCheck, Copy, Info
+  Check, ExternalLink, ShieldCheck, Copy, Info, ScanLine, Camera, CameraOff
 } from "lucide-react";
 
 const API = import.meta.env.VITE_CENTRAL_API_URL || "/api/v1";
@@ -1084,6 +1085,143 @@ function AdminActivityPage() {
   );
 }
 
+/* ── QR Code Scanner Component ────────────────────────────────── */
+function QrScanner({ onScan, onClose }) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const rafRef = useRef(null);
+  const streamRef = useRef(null);
+  const [status, setStatus] = useState("starting"); // starting | scanning | error
+  const [errorMsg, setErrorMsg] = useState("");
+  const [detected, setDetected] = useState(false);
+
+  const stopCamera = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        });
+        if (!active) { stream.getTracks().forEach((t) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+          setStatus("scanning");
+          tick();
+        }
+      } catch (err) {
+        if (!active) return;
+        setErrorMsg(
+          err.name === "NotAllowedError"
+            ? "Camera permission denied. Please allow camera access and try again."
+            : "Could not access camera: " + err.message
+        );
+        setStatus("error");
+      }
+    }
+
+    function tick() {
+      if (!active) return;
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas || video.readyState < 2) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+      if (code && code.data) {
+        setDetected(true);
+        stopCamera();
+        // Extract token from full verify URL or use raw data
+        let token = code.data.trim();
+        try {
+          const url = new URL(token);
+          const parts = url.pathname.split("/").filter(Boolean);
+          const idx = parts.indexOf("verify");
+          if (idx !== -1 && parts[idx + 1]) token = decodeURIComponent(parts[idx + 1]);
+        } catch {}
+        onScan(token);
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    startCamera();
+    return () => {
+      active = false;
+      stopCamera();
+    };
+  }, [onScan, stopCamera]);
+
+  return (
+    <div className="qr-scanner-overlay">
+      <div className="qr-scanner-card">
+        <div className="qr-scanner-header">
+          <div className="qr-scanner-title">
+            <ScanLine size={20} />
+            <span>Scan QR Code</span>
+          </div>
+          <button className="qr-close-btn" onClick={() => { stopCamera(); onClose(); }} aria-label="Close scanner">
+            <XCircle size={22} />
+          </button>
+        </div>
+
+        <div className="qr-viewfinder-wrap">
+          {status === "starting" && (
+            <div className="qr-status-overlay">
+              <div className="qr-spinner" />
+              <p>Starting camera…</p>
+            </div>
+          )}
+          {status === "error" && (
+            <div className="qr-status-overlay qr-error">
+              <CameraOff size={36} />
+              <p>{errorMsg}</p>
+              <button onClick={() => { stopCamera(); onClose(); }}>Dismiss</button>
+            </div>
+          )}
+          {detected && (
+            <div className="qr-status-overlay qr-success">
+              <CheckCircle2 size={44} />
+              <p>QR Code detected!</p>
+            </div>
+          )}
+          <video ref={videoRef} className="qr-video" muted playsInline />
+          <canvas ref={canvasRef} className="qr-canvas" />
+          {status === "scanning" && !detected && (
+            <div className="qr-scanner-frame">
+              <div className="qr-corner tl" />
+              <div className="qr-corner tr" />
+              <div className="qr-corner bl" />
+              <div className="qr-corner br" />
+              <div className="qr-scan-line" />
+            </div>
+          )}
+        </div>
+
+        <p className="qr-hint">
+          Point your camera at the QR code on the certificate.
+          It will be detected automatically.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Public VerifyPage (NO public activity log rendered) ──────────────── */
 function VerifyPage() {
   const routeToken = tokenFromPath();
@@ -1093,6 +1231,7 @@ function VerifyPage() {
   const [error, setError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [clientIp, setClientIp] = useState("Detecting...");
+  const [showQr, setShowQr] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -1167,6 +1306,18 @@ function VerifyPage() {
         <p>Check whether a certificate was issued by this Certificate Management System.</p>
       </section>
 
+      {/* QR Scanner Modal */}
+      {showQr && (
+        <QrScanner
+          onScan={(token) => {
+            setShowQr(false);
+            setInput(token);
+            navigate(`/verify/${encodeURIComponent(token)}`);
+          }}
+          onClose={() => setShowQr(false)}
+        />
+      )}
+
       <section className="search-panel">
         <div className="search-heading">
           <h2>Certificate Verification</h2>
@@ -1178,7 +1329,7 @@ function VerifyPage() {
             navigate(`/verify/${encodeURIComponent(input.trim())}`);
           }}
         >
-          <label htmlFor="token">Verification Token</label>
+          <label htmlFor="token">Verification Token or QR Code</label>
           <div className="search-row">
             <div className="input-wrap">
               <Search size={18} />
@@ -1190,11 +1341,23 @@ function VerifyPage() {
                 autoComplete="off"
               />
             </div>
+            <button
+              type="button"
+              className="qr-scan-btn"
+              onClick={() => setShowQr(true)}
+              title="Scan QR Code"
+              aria-label="Scan QR Code"
+            >
+              <ScanLine size={18} /> Scan QR
+            </button>
             <button disabled={!input.trim()}>
               Verify <CheckCircle2 size={16} />
             </button>
           </div>
         </form>
+        <p className="qr-hint-inline">
+          <Camera size={13} /> You can also scan the QR code printed on the certificate using your device camera.
+        </p>
       </section>
 
       {/* Toast Alert */}
