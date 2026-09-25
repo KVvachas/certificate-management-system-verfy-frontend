@@ -7,8 +7,15 @@ import {
   CalendarDays, Sparkles, Shield, Zap, Users, FileCheck,
   ChevronRight, Globe, Clock, TrendingUp, Layout, Play,
   Download, Activity, RefreshCw, Trash2, Filter, FileSpreadsheet,
-  Check, ExternalLink, ShieldCheck, Copy, Info, ScanLine, Camera, CameraOff
+  Check, ExternalLink, ShieldCheck, Copy, Info, ScanLine, Camera, CameraOff,
+  Eye, Printer, X
 } from "lucide-react";
+import {
+  generateUniversalCertificateHtml,
+  downloadCertificateHtmlFile,
+  printCertificate,
+  generateQrDataUrl,
+} from "./universalCertificate.js";
 
 const API = import.meta.env.VITE_CENTRAL_API_URL || "/api/v1";
 const tokenFromPath = () => useParams().verificationToken;
@@ -500,76 +507,146 @@ function exportLogsJson(logs) {
 
 /* Certificate HTML & PDF Generator */
 function downloadCertificateFile(cert, program, event) {
-  const certNumber = cert.certificateNumber || "CERTIFICATE";
-  const recipient = cert.recipientName || "Recipient";
-  const progName = program?.name || "Certificate Program";
-  const evName = event?.name || "Certificate Management System";
-  const dateStr = cert.issuedDate || new Date().toISOString().split("T")[0];
-  const token = cert.verificationToken || "VERIFIED-TOKEN";
+  return downloadCertificateHtmlFile({ cert, program, event });
+}
+
+/* Certificate Interactive Preview Modal */
+function CertificatePreviewModal({ isOpen, onClose, result, onDownload, onPrint }) {
+  if (!isOpen || !result || !result.certificate) return null;
+  const cert = result.certificate;
+  const program = result.program;
+  const event = result.event;
+  const [qrUrl, setQrUrl] = useState("");
+
+  const token = cert.verificationToken || cert.certificateNumber || "TOKEN";
   const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(token)}`;
 
-  const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Certificate - ${recipient} - ${certNumber}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #0F172A; min-height: 100vh; display: grid; place-items: center; padding: 36px 16px; color: #0F172A; }
-    .print-actions { position: fixed; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 99; }
-    .print-btn { background: #2563EB; color: #fff; border: 0; padding: 10px 18px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
-    .cert-frame { width: 940px; max-width: 100%; background: #FFFFFF; border: 14px solid #1E293B; outline: 3px solid #2563EB; outline-offset: -8px; border-radius: 12px; padding: 56px 48px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.45); text-align: center; }
-    .watermark { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0.025; font-size: 80px; font-weight: 900; pointer-events: none; }
-    .org-banner { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #2563EB; background: #EFF6FF; padding: 6px 16px; border-radius: 99px; margin-bottom: 24px; }
-    h1 { font-family: 'Cinzel', serif; font-size: 38px; color: #0F172A; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .subtitle { font-size: 13px; text-transform: uppercase; letter-spacing: 0.22em; color: #64748B; margin-bottom: 28px; font-weight: 600; }
-    .presentation { font-size: 15px; color: #64748B; margin-bottom: 12px; }
-    .recipient { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 700; color: #1E3A8A; margin: 8px 0 16px; border-bottom: 2px solid #E2E8F0; display: inline-block; padding: 0 36px 8px; }
-    .achievement { font-size: 15px; line-height: 1.7; color: #334155; max-width: 660px; margin: 0 auto 32px; }
-    .meta-table { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; padding: 18px 0; margin-bottom: 32px; background: #F8FAFC; border-radius: 6px; }
-    .meta-cell small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748B; font-weight: 700; margin-bottom: 4px; }
-    .meta-cell strong { font-size: 14px; color: #0F172A; font-family: 'Consolas', monospace; font-weight: 700; }
-    .footer-row { display: flex; justify-content: space-between; align-items: center; padding: 0 12px; }
-    .verified-pill { display: inline-flex; align-items: center; gap: 6px; background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 99px; border: 1px solid #86EFAC; }
-    .verify-link { font-size: 11px; color: #64748B; word-break: break-all; }
-    @media print { .print-actions { display: none; } body { background: white; padding: 0; } .cert-frame { border-width: 8px; box-shadow: none; } }
-  </style>
-</head>
-<body>
-  <div class="print-actions">
-    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
-  </div>
-  <div class="cert-frame">
-    <div class="watermark">CMS VERIFIED</div>
-    <div class="org-banner">★ Certificate Management System · Central Verification ★</div>
-    <h1>Certificate of Completion</h1>
-    <div class="subtitle">Official Digital Credential</div>
-    <p class="presentation">This certificate is awarded to</p>
-    <div class="recipient">${recipient}</div>
-    <p class="achievement">for successfully completing <strong>${progName}</strong> conducted as part of <strong>${evName}</strong>.</p>
-    <div class="meta-table">
-      <div class="meta-cell"><small>Certificate Number</small><strong>${certNumber}</strong></div>
-      <div class="meta-cell"><small>Issue Date</small><strong>${dateStr}</strong></div>
-      <div class="meta-cell"><small>Verification Token</small><strong>${token}</strong></div>
-    </div>
-    <div class="footer-row">
-      <div class="verified-pill">✓ Tamper-Proof Verified</div>
-      <div class="verify-link">Online check: ${verifyUrl}</div>
-    </div>
-  </div>
-</body>
-</html>`;
+  useEffect(() => {
+    generateQrDataUrl(verifyUrl).then(setQrUrl);
+  }, [verifyUrl]);
 
-  const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Certificate_${recipient.replace(/[^a-zA-Z0-9]/g, "_")}_${certNumber}.html`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const html = generateUniversalCertificateHtml({
+    cert,
+    program,
+    event,
+    origin: window.location.origin,
+    qrDataUrl: qrUrl,
+  });
+
+  return (
+    <div className="cert-modal-backdrop" onClick={onClose}>
+      <div className="cert-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="cert-modal-header">
+          <div className="cert-modal-title">
+            <Award size={18} />
+            <span>Universal Certificate Preview</span>
+          </div>
+          <div className="cert-modal-actions">
+            <button
+              className="btn-action-modal print"
+              onClick={() => onPrint && onPrint(result)}
+              title="Print certificate or save as PDF"
+            >
+              <Printer size={15} /> Print / Save as PDF
+            </button>
+            <button
+              className="btn-action-modal download"
+              onClick={() => onDownload && onDownload(result)}
+              title="Download standalone universal .html certificate"
+            >
+              <Download size={15} /> Download .HTML
+            </button>
+            <a
+              className="btn-action-modal external"
+              href={`/verify/${encodeURIComponent(token)}/certificate`}
+              target="_blank"
+              rel="noreferrer"
+              title="Open full page certificate"
+            >
+              <ExternalLink size={15} /> Full Page View
+            </a>
+            <button className="cert-modal-close" onClick={onClose} title="Close preview">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="cert-modal-body">
+          <iframe
+            title="Certificate Preview"
+            className="cert-preview-iframe"
+            srcDoc={html}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Standalone Full-Page Certificate View */
+function StandaloneCertificateView() {
+  const { verificationToken } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [qrUrl, setQrUrl] = useState("");
+
+  useEffect(() => {
+    if (!verificationToken) return;
+    fetch(`${API}/public/verify/${encodeURIComponent(verificationToken)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Certificate not found or invalid.");
+        return res.json();
+      })
+      .then(async (json) => {
+        setData(json);
+        const token = json.certificate?.verificationToken || verificationToken;
+        const vUrl = `${window.location.origin}/verify/${encodeURIComponent(token)}`;
+        const qr = await generateQrDataUrl(vUrl);
+        setQrUrl(qr);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [verificationToken]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#0B0F19", color: "#F8FAFC", fontFamily: "sans-serif" }}>
+        <p>Loading universal certificate...</p>
+      </div>
+    );
+  }
+
+  if (error || !data || !data.certificate) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#0B0F19", color: "#F8FAFC", fontFamily: "sans-serif", padding: 20 }}>
+        <div style={{ background: "#1E293B", padding: 36, borderRadius: 12, textAlign: "center", maxWidth: 440, border: "1px solid #334155" }}>
+          <h2 style={{ color: "#F87171", marginBottom: 12 }}>Certificate Not Found</h2>
+          <p style={{ color: "#94A3B8", marginBottom: 20 }}>{error || "Could not retrieve authentic certificate record."}</p>
+          <Link to="/verify" style={{ color: "#38BDF8", textDecoration: "none", fontWeight: 600 }}>← Return to Verification Portal</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const html = generateUniversalCertificateHtml({
+    cert: data.certificate,
+    program: data.program,
+    event: data.event,
+    origin: window.location.origin,
+    qrDataUrl: qrUrl,
+  });
+
+  return (
+    <iframe
+      title="Universal Certificate"
+      srcDoc={html}
+      style={{ width: "100vw", height: "100vh", border: 0, display: "block" }}
+    />
+  );
 }
 
 /* ── ActivityLog Component ───────────────────────────── */
@@ -1235,26 +1312,49 @@ function VerifyPage() {
     }
   }
 
-  async function handleDownload(res) {
-    if (!res || !res.certificate) return;
-    const cert = res.certificate;
-    downloadCertificateFile(cert, res.program, res.event);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
+  async function recordDownloadActivity(cert, eventName) {
     const ip = clientIp && clientIp !== "Detecting..." ? clientIp : await detectClientIp();
-    // Record download event in live database
     fetch(`${API}/public/activity/download`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        who: cert.recipientName || "Recipient",
-        token: cert.verificationToken || input,
-        certificateNumber: cert.certificateNumber || "-",
-        eventName: res.event?.name || res.program?.name || "-",
+        who: cert?.recipientName || "Recipient",
+        token: cert?.verificationToken || input,
+        certificateNumber: cert?.certificateNumber || "-",
+        eventName: eventName || "-",
         ip: ip,
       }),
     }).catch(() => {});
+  }
 
-    setToastMessage(`✓ Official certificate downloaded for ${cert.recipientName}`);
+  function handlePreview(res) {
+    if (!res || !res.certificate) return;
+    setPreviewOpen(true);
+  }
+
+  async function handlePrint(res) {
+    if (!res || !res.certificate) return;
+    const cert = res.certificate;
+    await printCertificate({
+      cert,
+      program: res.program,
+      event: res.event,
+    });
+    recordDownloadActivity(cert, res.event?.name || res.program?.name);
+  }
+
+  async function handleDownload(res) {
+    if (!res || !res.certificate) return;
+    const cert = res.certificate;
+    await downloadCertificateHtmlFile({
+      cert,
+      program: res.program,
+      event: res.event,
+    });
+    recordDownloadActivity(cert, res.event?.name || res.program?.name);
+    setToastMessage(`✓ Official universal certificate (.html) downloaded for ${cert.recipientName}`);
     setTimeout(() => setToastMessage(""), 5000);
   }
 
@@ -1372,13 +1472,26 @@ function VerifyPage() {
       )}
 
       {result && !busy && (
-        <Result result={result} onDownload={handleDownload} />
+        <Result
+          result={result}
+          onPreview={handlePreview}
+          onPrint={handlePrint}
+          onDownload={handleDownload}
+        />
       )}
+
+      <CertificatePreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        result={result}
+        onDownload={handleDownload}
+        onPrint={handlePrint}
+      />
     </main>
   );
 }
 
-function Result({ result, onDownload }) {
+function Result({ result, onPreview, onPrint, onDownload }) {
   const valid = result.verified;
   const revoked = result.certificate?.status === "REVOKED";
   return (
@@ -1411,14 +1524,32 @@ function Result({ result, onDownload }) {
 
         {valid && (
           <div className="result-download-action">
-            <button
-              type="button"
-              className="btn-download-cert"
-              onClick={() => onDownload && onDownload(result)}
-              title="Download official certificate copy"
-            >
-              <Download size={15} /> Download Certificate
-            </button>
+            <div className="result-actions-cluster">
+              <button
+                type="button"
+                className="btn-action-cert preview-btn"
+                onClick={() => onPreview && onPreview(result)}
+                title="Preview certificate in HTML"
+              >
+                <Eye size={15} /> Preview HTML
+              </button>
+              <button
+                type="button"
+                className="btn-action-cert print-btn"
+                onClick={() => onPrint && onPrint(result)}
+                title="Print or Save as PDF"
+              >
+                <Printer size={15} /> Print / PDF
+              </button>
+              <button
+                type="button"
+                className="btn-action-cert download-btn"
+                onClick={() => onDownload && onDownload(result)}
+                title="Download standalone HTML certificate"
+              >
+                <Download size={15} /> Download .HTML
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1443,19 +1574,37 @@ function Result({ result, onDownload }) {
           {valid && (
             <div className="cert-download-banner">
               <div className="cdb-info">
-                <Award size={20} className="cdb-icon" />
+                <Award size={22} className="cdb-icon" />
                 <div>
-                  <strong>Official Digital Certificate Ready</strong>
-                  <p>Generate a tamper-proof digital copy with full credential details and QR verification link.</p>
+                  <strong>Universal Official Certificate Ready</strong>
+                  <p>
+                    Issued to <strong>{result.certificate.recipientName}</strong> for <strong>{result.program?.name}</strong> at <strong>{result.event?.name}</strong> by <strong>{result.event?.organizer || "College of Engineering Poonjar"}</strong>.
+                  </p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn-download-cert secondary-style"
-                onClick={() => onDownload && onDownload(result)}
-              >
-                <Download size={15} /> Download Certificate (HTML / PDF)
-              </button>
+              <div className="cdb-buttons">
+                <button
+                  type="button"
+                  className="btn-action-cert preview-btn"
+                  onClick={() => onPreview && onPreview(result)}
+                >
+                  <Eye size={15} /> Preview HTML
+                </button>
+                <button
+                  type="button"
+                  className="btn-action-cert print-btn"
+                  onClick={() => onPrint && onPrint(result)}
+                >
+                  <Printer size={15} /> Print / PDF
+                </button>
+                <button
+                  type="button"
+                  className="btn-action-cert download-btn"
+                  onClick={() => onDownload && onDownload(result)}
+                >
+                  <Download size={15} /> Download .HTML
+                </button>
+              </div>
             </div>
           )}
         </>
@@ -2072,6 +2221,8 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/verify" element={<VerifyPage />} />
         <Route path="/verify/:verificationToken" element={<VerifyPage />} />
+        <Route path="/verify/:verificationToken/certificate" element={<StandaloneCertificateView />} />
+        <Route path="/certificate/:verificationToken" element={<StandaloneCertificateView />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/admin/activity" element={<AdminActivityPage />} />
         <Route path="/activity" element={<AdminActivityPage />} />
