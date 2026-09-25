@@ -32,6 +32,7 @@ function Shell({ children }) {
         </Link>
         <nav>
           <Link to="/verify" className="nav-link">Verify Certificate</Link>
+          <Link to="/about" className="nav-link">About & Policy</Link>
           <Link to="/verify" className="nav-cta">Check Now <ArrowRight size={14} /></Link>
         </nav>
       </header>
@@ -42,14 +43,15 @@ function Shell({ children }) {
             <img src="/icon.png" alt="CMS" />
             <div>
               <strong>Certificate Management System</strong>
-              <span>Trusted certificate issuance &amp; verification</span>
+              <span>Centralized verification platform by VS Freedom Solutions</span>
             </div>
           </div>
           <div className="footer-links">
             <Link to="/verify">Verify Certificate</Link>
+            <Link to="/about">About &amp; Policy</Link>
           </div>
           <div className="footer-copy">
-            <span>&#169; 2025 Certificate Management System</span>
+            <span>&#169; 2025 Certificate Management System · VS Freedom Solutions</span>
             <span>All rights reserved</span>
           </div>
         </div>
@@ -1520,6 +1522,408 @@ function ImportPage() {
   );
 }
 
+/* ─────────────────────────────────────────────────────────
+   About / Verification Policy Page
+───────────────────────────────────────────────────────── */
+function AboutPage() {
+  const sections = [
+    { id: "about", icon: <Shield size={20} />, label: "About CMS" },
+    { id: "how-it-works", icon: <Zap size={20} />, label: "How It Works" },
+    { id: "authorized-orgs", icon: <Users size={20} />, label: "Authorized Organizations" },
+    { id: "what-verified-means", icon: <CheckCircle2 size={20} />, label: "What Verified Means" },
+    { id: "unauthorized", icon: <ShieldAlert size={20} />, label: "Unauthorized Certificates" },
+    { id: "responsibility", icon: <FileCheck size={20} />, label: "Responsibility" },
+    { id: "status-changes", icon: <RefreshCw size={20} />, label: "Status Changes" },
+    { id: "privacy", icon: <LockKeyhole size={20} />, label: "Privacy" },
+    { id: "support", icon: <Info size={20} />, label: "Support" },
+    { id: "legal", icon: <Award size={20} />, label: "Legal & Copyright" },
+  ];
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <main className="about-page">
+      {/* Hero */}
+      <section className="about-hero">
+        <div className="about-hero-badge"><Shield size={14} /> Verification Policy</div>
+        <h1>CMS Central Verification Portal</h1>
+        <p className="about-hero-sub">
+          A centralized infrastructure for certificate verification and publication,
+          operated by <strong>VS Freedom Solutions</strong>.
+        </p>
+        <div className="about-hero-notice">
+          <CircleAlert size={18} />
+          <span>
+            <strong>CMS does not issue certificates.</strong> Certificates are issued by the
+            respective organizations that submitted them. CMS provides the verification
+            infrastructure only.
+          </span>
+        </div>
+      </section>
+
+      <div className="about-layout">
+        {/* Sidebar Nav */}
+        <aside className="about-sidebar">
+          <div className="about-sidebar-inner">
+            <div className="about-sidebar-label">On this page</div>
+            {sections.map((s) => (
+              <button key={s.id} className="about-nav-item" onClick={() => scrollTo(s.id)}>
+                <span className="about-nav-icon">{s.icon}</span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Content */}
+        <div className="about-content">
+
+          {/* 1 — About */}
+          <section id="about" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon"><Shield size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Who We Are</div>
+                <h2>About the CMS Verification Portal</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                The <strong>Certificate Management System (CMS) Central Verification Portal</strong> is
+                a centralized verification and publication platform operated by{" "}
+                <strong>VS Freedom Solutions</strong>. It serves as a trusted infrastructure channel
+                through which authorized organizations can submit certificate records for secure
+                online verification and publication.
+              </p>
+              <p>
+                CMS is <strong>not</strong> a certificate-issuing authority, educational institution,
+                event organizer, awarding body, or any organization that creates or awards certificates.
+                The organizations whose names appear on certificates are the actual issuers and sole
+                authorities over those credentials.
+              </p>
+              <div className="about-highlight-box">
+                <div className="about-highlight-icon"><Globe size={18} /></div>
+                <div>
+                  <strong>Operated by VS Freedom Solutions</strong>
+                  <p>VS Freedom Solutions maintains this portal as a service to authorized
+                  organizations seeking a secure, standardized, and publicly accessible verification channel.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 2 — How It Works */}
+          <section id="how-it-works" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon blue"><Zap size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">The Process</div>
+                <h2>How Verification Works</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <div className="about-steps">
+                <div className="about-step">
+                  <div className="about-step-num">01</div>
+                  <div>
+                    <strong>Organization Submits Records</strong>
+                    <p>An authorized organization submits certificate records through an authenticated,
+                    secured import channel using a unique organization key.</p>
+                  </div>
+                </div>
+                <div className="about-step">
+                  <div className="about-step-num">02</div>
+                  <div>
+                    <strong>CMS Publishes & Assigns Tokens</strong>
+                    <p>CMS stores the records and generates unique, tamper-resistant verification tokens
+                    for each certificate entry.</p>
+                  </div>
+                </div>
+                <div className="about-step">
+                  <div className="about-step-num">03</div>
+                  <div>
+                    <strong>Anyone Can Verify</strong>
+                    <p>Any member of the public, employer, or institution can enter a certificate number
+                    or token on this portal to instantly confirm authenticity.</p>
+                  </div>
+                </div>
+                <div className="about-step">
+                  <div className="about-step-num">04</div>
+                  <div>
+                    <strong>Result is Authoritative</strong>
+                    <p>The verification result reflects the exact data submitted by the issuing
+                    organization. CMS does not modify, interpret, or supplement this data.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 3 — Authorized Organizations */}
+          <section id="authorized-orgs" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon green"><Users size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Access Control</div>
+                <h2>Authorized Organizations</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                Only organizations that have entered into a formal agreement with VS Freedom Solutions
+                and have been issued a valid organizational access credential are permitted to submit
+                certificate records to this portal.
+              </p>
+              <p>
+                Each organization is responsible for the accuracy, completeness, and legitimacy of
+                the records they submit. CMS performs technical validation of record format and
+                integrity but does not independently verify the underlying certificates.
+              </p>
+              <div className="about-callout warn">
+                <ShieldAlert size={18} />
+                <span>Authorized organization certificates carry a digital signature in the
+                export file. The presence of a valid signature confirms that the data was
+                submitted through an authorized channel.</span>
+              </div>
+            </div>
+          </section>
+
+          {/* 4 — What Verified Means */}
+          <section id="what-verified-means" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon green"><CheckCircle2 size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Verification Scope</div>
+                <h2>What a Verified Status Means</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <div className="about-verdict-grid">
+                <div className="about-verdict verified">
+                  <div className="about-verdict-icon"><CheckCircle2 size={20} /></div>
+                  <strong>"Verified" means:</strong>
+                  <ul>
+                    <li>The certificate record exists in the CMS database.</li>
+                    <li>It was submitted by an organization authorized to use this portal.</li>
+                    <li>The record has not been revoked or flagged at the time of query.</li>
+                  </ul>
+                </div>
+                <div className="about-verdict not-found">
+                  <div className="about-verdict-icon"><XCircle size={20} /></div>
+                  <strong>"Not Found" means:</strong>
+                  <ul>
+                    <li>No matching record exists in the CMS database.</li>
+                    <li>The certificate may not have been submitted by the issuing organization.</li>
+                    <li>The certificate number may be incorrect or the certificate may be fraudulent.</li>
+                  </ul>
+                </div>
+              </div>
+              <p className="about-note">
+                A verified result does <em>not</em> constitute an endorsement of the certificate holder
+                or the issuing organization by VS Freedom Solutions or CMS.
+              </p>
+            </div>
+          </section>
+
+          {/* 5 — Unauthorized Certificates */}
+          <section id="unauthorized" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon red"><ShieldAlert size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Fraud Prevention</div>
+                <h2>Unauthorized or Fraudulent Certificates</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                CMS does not recognize, publish, or verify certificates that were not submitted
+                through an authorized organizational channel. Any certificate claiming to be
+                verifiable through this portal that does not return a verified result should be
+                treated with caution.
+              </p>
+              <p>
+                If you suspect a certificate presented to you is fraudulent or has been fabricated,
+                please report it through the official support channel listed in the Support section below.
+                Do not rely on visual appearance alone — always verify through this portal.
+              </p>
+              <div className="about-callout danger">
+                <CircleAlert size={18} />
+                <span>
+                  <strong>Caution:</strong> Forged certificates are a serious matter. If a certificate
+                  cannot be verified through this portal and the issuer claims it is legitimate,
+                  contact the issuing organization directly through verified official channels.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* 6 — Responsibility */}
+          <section id="responsibility" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon"><FileCheck size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Liability Scope</div>
+                <h2>Responsibility & Disclaimer</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                CMS and VS Freedom Solutions are responsible solely for the technical operation
+                of this verification portal — including uptime, data integrity of submitted records,
+                and the accuracy of verification responses relative to stored data.
+              </p>
+              <p>
+                CMS and VS Freedom Solutions bear <strong>no responsibility</strong> for:
+              </p>
+              <ul className="about-list">
+                <li>The content, validity, or legitimacy of the certificates submitted by organizations.</li>
+                <li>Actions taken by any party based on a verification result.</li>
+                <li>Certificates issued outside the CMS platform and not submitted for verification.</li>
+                <li>Any loss, damage, or consequence arising from reliance on verification results.</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* 7 — Status Changes */}
+          <section id="status-changes" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon blue"><RefreshCw size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Dynamic Records</div>
+                <h2>Status Changes & Revocation</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                Certificate records published on this portal may be updated or revoked by the
+                issuing organization at any time. A certificate that is verified today may reflect
+                a different status in the future if the issuing organization requests a change.
+              </p>
+              <p>
+                Common reasons for status changes include: administrative correction, revocation
+                for academic or disciplinary reasons, expiration of the credential, or legal order.
+                CMS processes such requests only when they originate from the authorized
+                organizational channel.
+              </p>
+            </div>
+          </section>
+
+          {/* 8 — Privacy */}
+          <section id="privacy" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon"><LockKeyhole size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Data Handling</div>
+                <h2>Privacy & Data Policy</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                CMS collects and stores only the certificate data submitted by authorized organizations.
+                Verification queries made on this portal are logged for security and audit purposes
+                including the certificate number queried, timestamp, and anonymized network information.
+              </p>
+              <p>
+                CMS does not sell, share, or disclose query or certificate data to third parties
+                except under the following conditions:
+              </p>
+              <ul className="about-list">
+                <li>When required by a competent legal or regulatory authority through an appropriate
+                official and authorized channel, subject to applicable law.</li>
+                <li>When necessary to investigate fraud or abuse of this platform.</li>
+                <li>When requested by the issuing organization for records they submitted.</li>
+              </ul>
+              <div className="about-callout info">
+                <LockKeyhole size={18} />
+                <span>All data in transit is encrypted. Certificate records are stored securely
+                and access is restricted to authorized personnel only.</span>
+              </div>
+            </div>
+          </section>
+
+          {/* 9 — Support */}
+          <section id="support" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon blue"><Info size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Get Help</div>
+                <h2>Support & Contact</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                For issues related to a specific certificate — including discrepancies, revocation
+                requests, or fraudulent certificates — please contact the issuing organization
+                directly using their official published contact details.
+              </p>
+              <p>
+                For issues related to the <em>operation of this portal</em> — such as a verified
+                certificate not displaying correctly, or to report suspected portal abuse — contact
+                VS Freedom Solutions through the official support channel.
+              </p>
+              <div className="about-highlight-box">
+                <div className="about-highlight-icon"><Globe size={18} /></div>
+                <div>
+                  <strong>VS Freedom Solutions — Portal Support</strong>
+                  <p>Operated by VS Freedom Solutions. Queries related to certificate content must
+                  be directed to the respective issuing organization.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 10 — Legal & Copyright */}
+          <section id="legal" className="about-section">
+            <div className="about-section-header">
+              <div className="about-section-icon"><Award size={22} /></div>
+              <div>
+                <div className="about-section-eyebrow">Legal Notice</div>
+                <h2>Copyright & Legal</h2>
+              </div>
+            </div>
+            <div className="about-section-body">
+              <p>
+                The CMS Central Verification Portal, its software, design, branding, and
+                operational infrastructure are the intellectual property of{" "}
+                <strong>VS Freedom Solutions</strong>. All rights reserved.
+              </p>
+              <p>
+                Unauthorized reproduction, scraping, automated querying beyond reasonable
+                personal use, or any attempt to circumvent the access controls of this portal
+                is strictly prohibited and may result in legal action.
+              </p>
+              <p>
+                The certificate data published on this portal remains the intellectual property
+                and sole responsibility of the respective issuing organizations. CMS acts only
+                as a technical intermediary.
+              </p>
+              <div className="about-legal-badge">
+                <span>&#169; {new Date().getFullYear()} VS Freedom Solutions — CMS Central Verification Portal</span>
+                <span>All rights reserved.</span>
+              </div>
+            </div>
+          </section>
+
+        </div>{/* /about-content */}
+      </div>{/* /about-layout */}
+
+      {/* CTA */}
+      <section className="about-cta">
+        <div className="about-cta-inner">
+          <ShieldCheck size={32} />
+          <h2>Ready to verify a certificate?</h2>
+          <p>Enter a certificate number or scan a QR code to instantly check authenticity.</p>
+          <Link to="/verify" className="nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 15, padding: "14px 28px" }}>
+            Verify Now <ArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default function App() {
   return (
     <Shell>
@@ -1527,6 +1931,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/verify" element={<VerifyPage />} />
         <Route path="/verify/:verificationToken" element={<VerifyPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/admin/activity" element={<AdminActivityPage />} />
         <Route path="/activity" element={<AdminActivityPage />} />
         <Route path="/admin/import" element={<ImportPage />} />
